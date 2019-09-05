@@ -40,22 +40,21 @@ mat3 rotateZ(float theta) {
     );
 }
 
-float sdBox( vec3 p, vec3 b ) {
-  p = p - (b / 2.0);
+float sdBox(vec3 p, vec3 b) {
   vec3 d = abs(p) - b;
   return length(max(d,0.0))
          + min(max(d.x,max(d.y,d.z)),0.0);
 }
 
-float opUnion( float d1, float d2 ) { return min(d1,d2); }
+float opUnion(float d1, float d2) { return min(d1,d2); }
 
 float sceneSDF(vec3 samplePoint) {
-    samplePoint.y = -samplePoint.y;        
+    samplePoint.y = -samplePoint.y;
     float box1 = sdBox(samplePoint + vec3(0.0, 0.0, -(BASE_SEP / 2.0)), vec3(BASE_RADIUS, 2, BASE_RADIUS));
     float box2 = sdBox(samplePoint + vec3(0.0, 0.0, BASE_SEP / 2.0), vec3(BASE_RADIUS, 2, BASE_RADIUS));
     float surface = opUnion(box1, box2);
     for (uint i = 0u; i < 10u; i++) {
-        float base1 = sdBox(samplePoint + vec3(0, float(i) * NUC_SEP, 0), vec3(NUC_RADIUS, NUC_RADIUS, BASE_SEP / 2.0));
+        float base1 = sdBox(samplePoint + vec3(0, float(i) * NUC_SEP, -BASE_SEP / 4.0), vec3(NUC_RADIUS, NUC_RADIUS, BASE_SEP / 4.0));
         surface = opUnion(base1, surface);
     }
     return surface;
