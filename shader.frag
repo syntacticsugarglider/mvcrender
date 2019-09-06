@@ -11,36 +11,6 @@ const float NUC_RADIUS = 0.0125;
 const float PAIR_SEP = 0.0125;
 const float BASE_RADIUS = NUC_RADIUS;
 
-mat3 rotateX(float theta) {
-    float c = cos(theta);
-    float s = sin(theta);
-    return mat3(
-        vec3(1, 0, 0),
-        vec3(0, c, -s),
-        vec3(0, s, c)
-    );
-}
-
-mat3 rotateY(float theta) {
-    float c = cos(theta);
-    float s = sin(theta);
-    return mat3(
-        vec3(c, 0, s),
-        vec3(0, 1, 0),
-        vec3(-s, 0, c)
-    );
-}
-
-mat3 rotateZ(float theta) {
-    float c = cos(theta);
-    float s = sin(theta);
-    return mat3(
-        vec3(c, -s, 0),
-        vec3(s, c, 0),
-        vec3(0, 0, 1)
-    );
-}
-
 float sdBox(vec3 p, vec3 b) {
   vec3 d = abs(p) - b;
   return length(max(d,0.0))
@@ -55,13 +25,22 @@ vec3 opRep( in vec3 p, in vec3 c)
     return mod(p,c)-0.5*c;
 }
 
+vec3 opTwist( vec3 p )
+{
+    float  c = cos(1.0*p.y+1.0);
+    float  s = sin(1.0*p.y+1.0);
+    mat2   m = mat2(c,-s,s,c);
+    vec2 r = m*p.xz;
+    return vec3(r.x, p.y, r.y);
+}
+
 float sceneSDF(vec3 samplePoint) {
-    samplePoint.y = -samplePoint.y - 1.0;
-    samplePoint.xz = abs(samplePoint.xz);
+    samplePoint = opTwist(samplePoint);
+    samplePoint.z = abs(samplePoint.z);
     samplePoint.z = samplePoint.z - (BASE_SEP / 2.0);
-    vec3 nucPoint = opRep(samplePoint + vec3(0, NUC_RADIUS, 0), vec3(0, NUC_SEP, 0));
-    float box = sdBox(nucPoint + vec3(0.0, 0.0, 0.0), vec3(BASE_RADIUS, NUC_SEP, BASE_RADIUS));
-    float bases = sdBox(nucPoint + vec3(0, 0.0, (BASE_SEP / 4.0) - PAIR_SEP), vec3(NUC_RADIUS, NUC_RADIUS, BASE_SEP / 4.0));
+    samplePoint = opRep(samplePoint + vec3(0, NUC_RADIUS, 0), vec3(0, NUC_SEP, 0));
+    float box = sdBox(samplePoint + vec3(0.0, 0.0, 0.0), vec3(BASE_RADIUS, NUC_SEP, BASE_RADIUS));
+    float bases = sdBox(samplePoint + vec3(0, 0.0, (BASE_SEP / 4.0) - PAIR_SEP), vec3(NUC_RADIUS, NUC_RADIUS, BASE_SEP / 4.0));
     return opUnion(box, bases);
 }
 
