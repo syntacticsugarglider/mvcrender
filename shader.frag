@@ -60,7 +60,7 @@ float sceneSDF(vec3 samplePoint) {
     samplePoint.xz = abs(samplePoint.xz);
     samplePoint.z = samplePoint.z - (BASE_SEP / 2.0);
     vec3 nucPoint = opRep(samplePoint + vec3(0, NUC_RADIUS, 0), vec3(0, NUC_SEP, 0));
-    float box = sdBox(samplePoint + vec3(0.0, 0.0, 0.0), vec3(BASE_RADIUS, 2, BASE_RADIUS));
+    float box = sdBox(nucPoint + vec3(0.0, 0.0, 0.0), vec3(BASE_RADIUS, NUC_SEP, BASE_RADIUS));
     float bases = sdBox(nucPoint + vec3(0, 0.0, (BASE_SEP / 4.0) - PAIR_SEP), vec3(NUC_RADIUS, NUC_RADIUS, BASE_SEP / 4.0));
     return opUnion(box, bases);
 }
