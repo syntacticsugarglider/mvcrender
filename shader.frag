@@ -118,7 +118,7 @@ vec3 rayDirection(float fieldOfView, vec2 size, vec2 fragCoord) {
 
 void main() {
     vec3 viewDir = rayDirection(45.0, vec2(500.0, 500.0), gl_FragCoord.xy);
-    vec3 eye = vec3(3, 2, 2);
+    vec3 eye = vec3(10, 0, 0);
     
     mat3 viewToWorld = genViewMatrix(eye, vec3(0.0, 0.0, 0.0), vec3(0.0, 1.0, 0.0));
     
