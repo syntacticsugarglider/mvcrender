@@ -8,6 +8,7 @@ const float EPSILON = 0.0001;
 const float NUC_SEP = 0.332 / 5.0;
 const float BASE_SEP = 2.37 / 5.0;
 const float NUC_RADIUS = 0.025;
+const float PAIR_SEP = 0.0125;
 const float BASE_RADIUS = NUC_RADIUS;
 
 mat3 rotateX(float theta) {
@@ -41,6 +42,8 @@ mat3 rotateZ(float theta) {
 }
 
 float sdBox(vec3 p, vec3 b) {
+  b = b / 2.0;
+  p = p + b;
   vec3 d = abs(p) - b;
   return length(max(d,0.0))
          + min(max(d.x,max(d.y,d.z)),0.0);
@@ -49,13 +52,14 @@ float sdBox(vec3 p, vec3 b) {
 float opUnion(float d1, float d2) { return min(d1,d2); }
 
 float sceneSDF(vec3 samplePoint) {
-    samplePoint.y = -samplePoint.y;
-    float box1 = sdBox(samplePoint + vec3(0.0, 0.0, -(BASE_SEP / 2.0)), vec3(BASE_RADIUS, 2, BASE_RADIUS));
-    float box2 = sdBox(samplePoint + vec3(0.0, 0.0, BASE_SEP / 2.0), vec3(BASE_RADIUS, 2, BASE_RADIUS));
+    samplePoint.y = -samplePoint.y - 1.0;
+    float box1 = sdBox(samplePoint + vec3(0.0, 0.0, 0.0), vec3(BASE_RADIUS, 2, BASE_RADIUS));
+    float box2 = sdBox(samplePoint + vec3(0.0, 0.0, BASE_SEP + BASE_RADIUS), vec3(BASE_RADIUS, 2, BASE_RADIUS));
     float surface = opUnion(box1, box2);
     for (uint i = 0u; i < 10u; i++) {
-        float base1 = sdBox(samplePoint + vec3(0, float(i) * NUC_SEP, -BASE_SEP / 4.0), vec3(NUC_RADIUS, NUC_RADIUS, BASE_SEP / 4.0));
-        surface = opUnion(base1, surface);
+        float base1 = sdBox(samplePoint + vec3(0, float(i) * NUC_SEP, BASE_RADIUS), vec3(NUC_RADIUS, NUC_RADIUS, BASE_SEP / 2.0 - PAIR_SEP));
+        float base2 = sdBox(samplePoint + vec3(0, float(i) * NUC_SEP, BASE_RADIUS + PAIR_SEP + BASE_SEP / 2.0), vec3(NUC_RADIUS, NUC_RADIUS, BASE_SEP / 2.0 - PAIR_SEP));
+        surface = opUnion(opUnion(base2, base1), surface);
     }
     return surface;
 }
@@ -134,7 +138,7 @@ vec3 rayDirection(float fieldOfView, vec2 size, vec2 fragCoord) {
 
 void main() {
     vec3 viewDir = rayDirection(45.0, vec2(500.0, 500.0), gl_FragCoord.xy);
-    vec3 eye = vec3(15, 0, 0);
+    vec3 eye = vec3(3, 2, 2);
     
     mat3 viewToWorld = genViewMatrix(eye, vec3(0.0, 0.0, 0.0), vec3(0.0, 1.0, 0.0));
     
