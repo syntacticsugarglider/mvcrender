@@ -20,13 +20,20 @@ float sdBox(vec3 p, vec3 b) {
 float opUnion(float d1, float d2) { return min(d1,d2); }
 
 
-vec3 opRep( in vec3 p, in vec3 c)
-{
+vec3 opRep( in vec3 p, in vec3 c) {
     return mod(p,c)-0.5*c;
 }
 
-vec3 opTwist( vec3 p )
-{
+
+vec3 opBend(vec3 p) {
+    float c = cos(10.0*p.x+1.0);
+    float s = sin(1.0*p.x+1.0);
+    mat2  m = mat2(c,-s,s,c);
+    vec2 r = m*p.yz;
+    return vec3(r.x, r.x, r.y);
+}
+
+vec3 opTwist( vec3 p ) {
     float  c = cos(1.0*p.y+1.0);
     float  s = sin(1.0*p.y+1.0);
     mat2   m = mat2(c,-s,s,c);
@@ -35,6 +42,7 @@ vec3 opTwist( vec3 p )
 }
 
 float sceneSDF(vec3 samplePoint) {
+    samplePoint = opBend(samplePoint);
     samplePoint = opTwist(samplePoint);
     samplePoint.z = abs(samplePoint.z);
     samplePoint.z = samplePoint.z - (BASE_SEP / 2.0);
