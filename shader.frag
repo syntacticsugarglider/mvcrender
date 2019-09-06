@@ -5,10 +5,10 @@ const float MIN_DIST = 0.0;
 const float MAX_DIST = 100.0;
 const float EPSILON = 0.0001;
 
-const float NUC_SEP = 0.332 / 5.0;
-const float BASE_SEP = 2.37 / 5.0;
-const float NUC_RADIUS = 0.0125;
-const float PAIR_SEP = 0.0125;
+const float NUC_SEP = 0.332 / 2.0;
+const float BASE_SEP = 2.37 / 2.0;
+const float NUC_RADIUS = 0.125;
+const float PAIR_SEP = 0.125;
 const float BASE_RADIUS = NUC_RADIUS;
 
 float sdBox(vec3 p, vec3 b) {
@@ -34,7 +34,17 @@ vec3 opTwist( vec3 p )
     return vec3(r.x, p.y, r.y);
 }
 
+vec3 opBend( vec3 p )
+{
+    float  c = cos(1.0*p.x+1.0);
+    float  s = sin(1.0*p.x+1.0);
+    mat2   m = mat2(c,-s,s,c);
+    vec2 r = m*p.yz;
+    return vec3(p.x, r.x, r.y);
+}
+
 float sceneSDF(vec3 samplePoint) {
+    samplePoint = opBend(samplePoint);
     samplePoint = opTwist(samplePoint);
     samplePoint.z = abs(samplePoint.z);
     samplePoint.z = samplePoint.z - (BASE_SEP / 2.0);
