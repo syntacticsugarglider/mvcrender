@@ -51,17 +51,21 @@ float sdBox(vec3 p, vec3 b) {
 
 float opUnion(float d1, float d2) { return min(d1,d2); }
 
+
+vec3 opRep( in vec3 p, in vec3 c)
+{
+    return mod(p,c)-0.5*c;
+}
+
 float sceneSDF(vec3 samplePoint) {
     samplePoint.y = -samplePoint.y - 1.0;
+    vec3 nucPoint = opRep(samplePoint + vec3(0, NUC_RADIUS, 0), vec3(0, NUC_SEP, 0));
     float box1 = sdBox(samplePoint + vec3(0.0, 0.0, 0.0), vec3(BASE_RADIUS, 2, BASE_RADIUS));
     float box2 = sdBox(samplePoint + vec3(0.0, 0.0, BASE_SEP + BASE_RADIUS), vec3(BASE_RADIUS, 2, BASE_RADIUS));
     float surface = opUnion(box1, box2);
-    for (uint i = 0u; i < 10u; i++) {
-        float base1 = sdBox(samplePoint + vec3(0, float(i) * NUC_SEP, BASE_RADIUS), vec3(NUC_RADIUS, NUC_RADIUS, BASE_SEP / 2.0 - PAIR_SEP));
-        float base2 = sdBox(samplePoint + vec3(0, float(i) * NUC_SEP, BASE_RADIUS + PAIR_SEP + BASE_SEP / 2.0), vec3(NUC_RADIUS, NUC_RADIUS, BASE_SEP / 2.0 - PAIR_SEP));
-        surface = opUnion(opUnion(base2, base1), surface);
-    }
-    return surface;
+    float bases1 = sdBox(nucPoint + vec3(0, 0, BASE_RADIUS), vec3(NUC_RADIUS, NUC_RADIUS, BASE_SEP / 2.0 - PAIR_SEP));
+    float bases2 = sdBox(nucPoint + vec3(0, 0, BASE_RADIUS + PAIR_SEP + BASE_SEP / 2.0), vec3(NUC_RADIUS, NUC_RADIUS, BASE_SEP / 2.0 - PAIR_SEP));
+    return opUnion(opUnion(bases1, bases2), surface);
 }
 
 float shortestDistanceToSurface(vec3 eye, vec3 marchingDirection, float start, float end) {
