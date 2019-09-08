@@ -79,7 +79,7 @@
                     gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
                     let loc = gl.getAttribLocation(program, 'aVertexPosition');
                     let res = gl.getUniformLocation(program, 'res');
-                    let mpos = gl.getUniformLocation(program, 'mpos');
+                    let mloc = gl.getUniformLocation(program, 'mpos');
                     gl.vertexAttribPointer(loc, 3, gl.FLOAT, false, 0, 0);
                     gl.enableVertexAttribArray(loc);
 
@@ -99,7 +99,7 @@
                         gl.clear(gl.COLOR_BUFFER_BIT);
                         gl.useProgram(program);
                         gl.uniform2f(res, view.width * SAMPLE_RATIO, view.height * SAMPLE_RATIO);
-                        gl.uniform2f(mpos, mpos.x, mpos.y);
+                        gl.uniform2f(mloc, mpos.x, mpos.y);
                         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
                         window.requestAnimationFrame(draw);
                     };
