@@ -29,11 +29,12 @@
         }
     </style>
     <script type="text/javascript">
+        const SAMPLE_RATIO = 1;
         window.addEventListener('load', function () {
             const canvas = document.querySelector("canvas");
             let view = canvas.getBoundingClientRect();
-            canvas.width = view.width;
-            canvas.height = view.height;
+            canvas.width = view.width * SAMPLE_RATIO;
+            canvas.height = view.height * SAMPLE_RATIO;
             const gl = canvas.getContext("webgl");
             if (gl === null) {
                 alert("Unable to initialize WebGL. Your browser may not support it.");
@@ -82,15 +83,15 @@
 
                     window.addEventListener('resize', () => {
                         view = canvas.getBoundingClientRect();
-                        canvas.width = view.width;
-                        canvas.height = view.height;
+                        canvas.width = view.width * SAMPLE_RATIO;
+                        canvas.height = view.height * SAMPLE_RATIO
                     });
 
                     const draw = () => {
-                        gl.viewport(0, 0, view.width, view.height);
+                        gl.viewport(0, 0, view.width * SAMPLE_RATIO, view.height * SAMPLE_RATIO);
                         gl.clear(gl.COLOR_BUFFER_BIT);
                         gl.useProgram(program);
-                        gl.uniform2f(res, view.width, view.height);
+                        gl.uniform2f(res, view.width * SAMPLE_RATIO, view.height * SAMPLE_RATIO);
                         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
                         window.requestAnimationFrame(draw);
                     };

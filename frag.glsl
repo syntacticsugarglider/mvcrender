@@ -140,7 +140,7 @@ void main() {
     vec3 K_a = vec3(0.5);
     vec3 K_d = K_a;
     vec3 K_s = vec3(1.0, 1.0, 1.0);
-    float shininess = 10.0;
+    float shininess = 0.2;
     
     vec3 color = phongIllumination(K_a, K_d, K_s, shininess, p, eye);
     
