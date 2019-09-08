@@ -26,10 +26,11 @@
             position: fixed;
             top: 0;
             left: 0;
+            image-rendering: pixelated;
         }
     </style>
     <script type="text/javascript">
-        const SAMPLE_RATIO = 1;
+        const SAMPLE_RATIO = 2;
         window.addEventListener('load', function () {
             const canvas = document.querySelector("canvas");
             let view = canvas.getBoundingClientRect();
@@ -79,6 +80,7 @@
                     gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
                     let loc = gl.getAttribLocation(program, 'aVertexPosition');
                     let res = gl.getUniformLocation(program, 'res');
+                    let tloc = gl.getUniformLocation(program, 'time');
                     let mloc = gl.getUniformLocation(program, 'mpos');
                     gl.vertexAttribPointer(loc, 3, gl.FLOAT, false, 0, 0);
                     gl.enableVertexAttribArray(loc);
@@ -94,12 +96,13 @@
                         canvas.height = view.height * SAMPLE_RATIO
                     });
 
-                    const draw = () => {
+                    const draw = (delta) => {
                         gl.viewport(0, 0, view.width * SAMPLE_RATIO, view.height * SAMPLE_RATIO);
                         gl.clear(gl.COLOR_BUFFER_BIT);
                         gl.useProgram(program);
                         gl.uniform2f(res, view.width * SAMPLE_RATIO, view.height * SAMPLE_RATIO);
                         gl.uniform2f(mloc, mpos.x, mpos.y);
+                        gl.uniform1f(tloc, delta);
                         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
                         window.requestAnimationFrame(draw);
                     };
