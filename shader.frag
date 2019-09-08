@@ -5,10 +5,12 @@ const float MIN_DIST = 0.0;
 const float MAX_DIST = 100.0;
 const float EPSILON = 0.0001;
 
-const float NUC_SEP = 0.332 / 5.0;
-const float BASE_SEP = 2.37 / 5.0;
-const float NUC_RADIUS = 0.0125;
-const float PAIR_SEP = 0.0125;
+const float UNIT_RATIO = 0.2;
+const float NUC_SEP = 0.332 * UNIT_RATIO;
+const float BASE_SEP = 2.37 * UNIT_RATIO;
+const float NUC_RADIUS = 0.1 * UNIT_RATIO;
+const float PAIR_SEP = 0.1 * UNIT_RATIO;
+const float COIL_RATE = 0.5986479 / (NUC_SEP / UNIT_RATIO);
 const float BASE_RADIUS = NUC_RADIUS;
 
 float sdBox(vec3 p, vec3 b) {
@@ -27,8 +29,8 @@ vec3 opRep( in vec3 p, in vec3 c)
 
 vec3 opTwist( vec3 p )
 {
-    float  c = cos(1.0*p.y+1.0);
-    float  s = sin(1.0*p.y+1.0);
+    float  c = cos(COIL_RATE*p.y+1.0);
+    float  s = sin(COIL_RATE*p.y+1.0);
     mat2   m = mat2(c,-s,s,c);
     vec2 r = m*p.xz;
     return vec3(r.x, p.y, r.y);
