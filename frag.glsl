@@ -1,6 +1,7 @@
 precision mediump float;
 
 uniform vec2 res;
+uniform vec2 mpos;
 
 const int MAX_MARCHING_STEPS = 255;
 const float MIN_DIST = 0.0;
@@ -36,6 +37,16 @@ vec3 opTwist( vec3 p )
     mat2   m = mat2(c,-s,s,c);
     vec2 r = m*p.xz;
     return vec3(r.x, p.y, r.y);
+}
+
+mat3 rotateY(float theta) {
+    float c = cos(theta);
+    float s = sin(theta);
+    return mat3(
+        vec3(c, 0, s),
+        vec3(0, 1, 0),
+        vec3(-s, 0, c)
+    );
 }
 
 float sceneSDF(vec3 samplePoint) {
@@ -122,7 +133,9 @@ vec3 rayDirection(float fieldOfView, vec2 size, vec2 fragCoord) {
 
 void main() {
     vec3 viewDir = rayDirection(45.0, res, gl_FragCoord.xy);
-    vec3 eye = vec3(10, 0, 0);
+    vec3 eye = vec3(5.0, (mpos.y - 0.5) * 20.0, 5.0);
+
+    eye = eye * rotateY((mpos.x - 0.5) * 3.14);
     
     mat3 viewToWorld = genViewMatrix(eye, vec3(0.0, 0.0, 0.0), vec3(0.0, 1.0, 0.0));
     
