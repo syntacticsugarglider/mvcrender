@@ -1,5 +1,7 @@
 precision mediump float;
 
+uniform vec2 res;
+
 const int MAX_MARCHING_STEPS = 255;
 const float MIN_DIST = 0.0;
 const float MAX_DIST = 100.0;
@@ -119,7 +121,7 @@ vec3 rayDirection(float fieldOfView, vec2 size, vec2 fragCoord) {
 }
 
 void main() {
-    vec3 viewDir = rayDirection(45.0, vec2(500.0, 500.0), gl_FragCoord.xy);
+    vec3 viewDir = rayDirection(45.0, res, gl_FragCoord.xy);
     vec3 eye = vec3(10, 0, 0);
     
     mat3 viewToWorld = genViewMatrix(eye, vec3(0.0, 0.0, 0.0), vec3(0.0, 1.0, 0.0));
@@ -135,7 +137,7 @@ void main() {
     
     vec3 p = eye + dist * worldDir;
     
-    vec3 K_a = (estimateNormal(p) + vec3(1.0)) / 2.0;
+    vec3 K_a = vec3(0.5);
     vec3 K_d = K_a;
     vec3 K_s = vec3(1.0, 1.0, 1.0);
     float shininess = 10.0;
