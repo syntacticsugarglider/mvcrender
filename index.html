@@ -4,7 +4,7 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="UTF-8">
-    <title>DNA</title>
+    <title>syntactic</title>
 </head>
 
 <body>
@@ -18,6 +18,7 @@
             margin: 0;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
             overflow: hidden;
+            font-size: 15px;
         }
 
         canvas {
@@ -28,13 +29,23 @@
             left: 0;
             image-rendering: pixelated;
         }
+
+        .name {
+            position: fixed;
+            bottom: 1em;
+            left: 1em;
+            font-weight: bold;
+            font-size: 3em;
+            user-select: none;
+            color: #111111;
+        }
     </style>
     <script type="text/javascript">
         const SAMPLE_RATIO = 2;
         window.addEventListener('load', function () {
             const canvas = document.querySelector("canvas");
             let view = canvas.getBoundingClientRect();
-            let mpos = { x: 0, y: 0 };
+            let mpos = { x: 0.5, y: 0.5 };
             canvas.width = view.width * SAMPLE_RATIO;
             canvas.height = view.height * SAMPLE_RATIO;
             const gl = canvas.getContext("webgl");
@@ -90,6 +101,21 @@
                         mpos.y = e.y / view.height;
                     });
 
+                    document.documentElement.addEventListener('mouseenter', (e) => {
+                        mpos.x = e.x / view.width;
+                        mpos.y = e.y / view.height;
+                    });
+
+                    window.addEventListener('touchmove', (e) => {
+                        mpos.x = e.changedTouches[0].clientX / view.width;
+                        mpos.y = e.changedTouches[0].clientY / view.height;
+                    });
+
+                    window.addEventListener('mouseover', (e) => {
+                        mpos.x = e.changedTouches[0].clientX / view.width;
+                        mpos.y = e.changedTouches[0].clientY / view.height;
+                    });
+
                     window.addEventListener('resize', () => {
                         view = canvas.getBoundingClientRect();
                         canvas.width = view.width * SAMPLE_RATIO;
@@ -112,6 +138,7 @@
         })
     </script>
     <canvas></canvas>
+    <div class="name">syntactic</div>
 </body>
 
 </html>

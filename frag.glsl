@@ -4,14 +4,14 @@ uniform vec2 res;
 uniform vec2 mpos;
 uniform float time;
 
-const int MAX_MARCHING_STEPS = 10;
-const float MIN_DIST = 9.0;
-const float MAX_DIST = 10.0;
-const float EPSILON = 0.5;
+const int MAX_MARCHING_STEPS = 255;
+const float MIN_DIST = 0.0;
+const float MAX_DIST = 100.0;
+const float EPSILON = 0.001;
 
-const float NUC_SEP = 0.332 / 5.0;
-const float BASE_SEP = 2.37 / 5.0;
-const float NUC_RADIUS = 0.025;
+const float NUC_SEP = 0.332 / 2.0;
+const float BASE_SEP = 2.37 / 2.0;
+const float NUC_RADIUS = 0.125;
 const float PAIR_SEP = 0.125;
 const float BASE_RADIUS = NUC_RADIUS;
 
@@ -24,29 +24,30 @@ float sdBox(vec3 p, vec3 b) {
 float opUnion(float d1, float d2) { return min(d1,d2); }
 
 
-vec3 opRep( in vec3 p, in vec3 c) {
+vec3 opRep( in vec3 p, in vec3 c)
+{
     return mod(p,c)-0.5*c;
 }
 
-
-vec3 opBend(vec3 p) {
-    float c = cos(10.0*p.x+1.0);
-    float s = sin(1.0*p.x+1.0);
-    mat2  m = mat2(c,-s,s,c);
-    vec2 r = m*p.yz;
-    return vec3(r.x, r.x, r.y);
-}
-
-vec3 opTwist( vec3 p ) {
-    float  c = cos(10.0*p.y+1.0);
+vec3 opTwist( vec3 p )
+{
+    float  c = cos(1.0*p.y+1.0);
     float  s = sin(1.0*p.y+1.0);
     mat2   m = mat2(c,-s,s,c);
     vec2 r = m*p.xz;
     return vec3(r.x, p.y, r.y);
 }
 
+vec3 opBend( vec3 p )
+{
+    float  c = cos(((time / 50000.0) + 0.5)*p.x+1.0);
+    float  s = sin(mpos.y*p.x+mpos.x);
+    mat2   m = mat2(c,-s,s,c);
+    vec2 r = m*p.yz;
+    return vec3(p.x, r.x, r.y);
+}
+
 float sceneSDF(vec3 samplePoint) {
-    samplePoint.x -= time / 100000.0;
     samplePoint = opBend(samplePoint);
     samplePoint = opTwist(samplePoint);
     samplePoint.z = abs(samplePoint.z);
@@ -131,7 +132,7 @@ vec3 rayDirection(float fieldOfView, vec2 size, vec2 fragCoord) {
 
 void main() {
     vec3 viewDir = rayDirection(45.0, res, gl_FragCoord.xy);
-    vec3 eye = vec3(10, 0, 0);
+    vec3 eye = vec3(10.0, 0, 0);
     
     mat3 viewToWorld = genViewMatrix(eye, vec3(0.0, 0.0, 0.0), vec3(0.0, 1.0, 0.0));
     
@@ -145,7 +146,7 @@ void main() {
     }
     
     vec3 p = eye + dist * worldDir;
-    
+
     vec3 K_a = (estimateNormal(p) + vec3(1.0)) / 2.0;
     vec3 K_d = K_a;
     vec3 K_s = vec3(1.0, 1.0, 1.0);
