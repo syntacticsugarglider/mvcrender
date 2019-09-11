@@ -36,7 +36,7 @@
             let mpos = { x: 0, y: 0 };
             canvas.width = view.width * SAMPLE_RATIO;
             canvas.height = view.height * SAMPLE_RATIO;
-            const gl = canvas.getContext("webgl");
+            const gl = canvas.getContext("webgl2");
             if (gl === null) {
                 alert("Unable to initialize WebGL. Your browser may not support it.");
                 return;
@@ -54,19 +54,20 @@
                     gl.shaderSource(frag, shader);
                     gl.compileShader(frag);
                     if (!gl.getShaderParameter(frag, gl.COMPILE_STATUS)) {
-                        alert(gl.getShaderInfoLog(frag));
+                        alert("frag: " + gl.getShaderInfoLog(frag));
                         return null;
                     }
                     const vert = gl.createShader(gl.VERTEX_SHADER);
-                    gl.shaderSource(vert, `#version 100
-                        attribute vec4 aVertexPosition;
+                    gl.shaderSource(vert, `#version 300 es
+                        in vec4 aVertexPosition;
+                        out vec4 position;
                         void main() {
-                            gl_Position = aVertexPosition;
+                            position = aVertexPosition;
                         }
                     `);
                     gl.compileShader(vert);
                     if (!gl.getShaderParameter(vert, gl.COMPILE_STATUS)) {
-                        alert(gl.getShaderInfoLog(vert));
+                        alert("vert: " + gl.getShaderInfoLog(vert));
                         return null;
                     }
                     const program = gl.createProgram();
@@ -80,6 +81,7 @@
                     let loc = gl.getAttribLocation(program, 'aVertexPosition');
                     let res = gl.getUniformLocation(program, 'res');
                     let mloc = gl.getUniformLocation(program, 'mpos');
+                    let sequence = gl.getUniformLocation(program, 'sequences');
                     gl.vertexAttribPointer(loc, 3, gl.FLOAT, false, 0, 0);
                     gl.enableVertexAttribArray(loc);
 

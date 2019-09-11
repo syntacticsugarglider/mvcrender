@@ -1,7 +1,11 @@
+#version 300 es
 precision mediump float;
 
 uniform vec2 res;
 uniform vec2 mpos;
+uniform int sequence[3]; 
+
+const vec3 NUC_COLORS[4] = vec3[]{vec3(0, 255, 0), vec3(0, 0, 255), vec3(255, 0, 0), vec3(255, 255, 0)};
 
 const int MAX_MARCHING_STEPS = 255;
 const float MIN_DIST = 0.0;
@@ -10,11 +14,13 @@ const float EPSILON = 0.0001;
 
 const float UNIT_RATIO = 0.2;
 const float NUC_SEP = 0.332 * UNIT_RATIO;
-const float BASE_SEP = 2.37 * UNIT_RATIO;
+const float PHOS_SEP = 2.37 * UNIT_RATIO;
 const float NUC_RADIUS = 0.1 * UNIT_RATIO;
 const float PAIR_SEP = 0.1 * UNIT_RATIO;
-const float COIL_RATE = 0.5986479 / (NUC_SEP / UNIT_RATIO);
-const float BASE_RADIUS = NUC_RADIUS;
+const float PHOS_RADIUS = NUC_RADIUS;
+const float COIL_RATE = 0.5986479 / NUC_SEP / 4.0;
+
+out vec4 fragColor;
 
 float sdBox(vec3 p, vec3 b) {
   vec3 d = abs(p) - b;
@@ -30,11 +36,11 @@ vec3 opRep( in vec3 p, in vec3 c)
     return mod(p,c)-0.5*c;
 }
 
-vec3 opTwist( vec3 p )
+vec3 opCoil(vec3 p)
 {
-    float  c = cos(COIL_RATE*p.y+1.0);
-    float  s = sin(COIL_RATE*p.y+1.0);
-    mat2   m = mat2(c,-s,s,c);
+    float c = cos(COIL_RATE*p.y);
+    float s = sin(COIL_RATE*p.y);
+    mat2 m = mat2(c,-s,s,c);
     vec2 r = m*p.xz;
     return vec3(r.x, p.y, r.y);
 }
@@ -50,13 +56,13 @@ mat3 rotateY(float theta) {
 }
 
 float sceneSDF(vec3 samplePoint) {
-    samplePoint = opTwist(samplePoint);
+    samplePoint = opCoil(samplePoint);
     samplePoint.z = abs(samplePoint.z);
-    samplePoint.z = samplePoint.z - (BASE_SEP / 2.0);
+    samplePoint.z = samplePoint.z - (PHOS_SEP / 2.0);
     samplePoint = opRep(samplePoint + vec3(0, NUC_RADIUS, 0), vec3(0, NUC_SEP, 0));
-    float box = sdBox(samplePoint + vec3(0.0, 0.0, 0.0), vec3(BASE_RADIUS, NUC_SEP, BASE_RADIUS));
-    float bases = sdBox(samplePoint + vec3(0, 0.0, (BASE_SEP / 4.0) - PAIR_SEP), vec3(NUC_RADIUS, NUC_RADIUS, BASE_SEP / 4.0));
-    return opUnion(box, bases);
+    float phosphates = sdBox(samplePoint, vec3(PHOS_RADIUS, NUC_SEP, PHOS_RADIUS));
+    float nucleotides = sdBox(samplePoint + vec3(0, 0.0, (PHOS_SEP / 4.0) - PAIR_SEP), vec3(NUC_RADIUS, NUC_RADIUS, PHOS_SEP / 4.0));
+    return opUnion(nucleotides, phosphates);
 }
 
 float shortestDistanceToSurface(vec3 eye, vec3 marchingDirection, float start, float end) {
@@ -144,18 +150,28 @@ void main() {
     float dist = shortestDistanceToSurface(eye, worldDir, MIN_DIST, MAX_DIST);
     
     if (dist > MAX_DIST - EPSILON) {
-        gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
+        fragColor = vec4(0.0, 0.0, 0.0, 0.0);
 		return;
     }
     
     vec3 p = eye + dist * worldDir;
-    
-    vec3 K_a = vec3(0.5);
+
+    vec3 K_a = vec3(0);
+    if (sqrt(pow(p.x, 2.0) + pow(p.z, 2.0)) < PHOS_SEP / 2.0 - PHOS_RADIUS) {
+        // int nuc_color_idx = sequence[int(mod(floor(p.y / NUC_SEP), sequence.length))];
+        if ((p*rotateY(COIL_RATE*p.y)).z < 0.0) { // TODO: fix this condition to be real
+            // K_a = NUC_COLORS[nuc_color_idx]
+            K_a = vec3(0, 255, 0);
+        } else {
+            // K_a = NUC_COLORS[mod(nuc_color_idx + 2, 4)];
+            K_a = vec3(0, 255, 255);
+        }
+    }
     vec3 K_d = K_a;
     vec3 K_s = vec3(1.0, 1.0, 1.0);
-    float shininess = 0.2;
+    float shininess = 0.4;
     
     vec3 color = phongIllumination(K_a, K_d, K_s, shininess, p, eye);
     
-    gl_FragColor = vec4(color, 1.0);
+    fragColor = vec4(color, 1.0);
 }
