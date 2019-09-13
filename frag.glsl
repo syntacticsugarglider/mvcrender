@@ -1,11 +1,9 @@
-#version 300 es
 precision mediump float;
 
 uniform vec2 res;
 uniform vec2 mpos;
-uniform int sequence[3]; 
-
-const vec3 NUC_COLORS[4] = vec3[]{vec3(0, 255, 0), vec3(0, 0, 255), vec3(255, 0, 0), vec3(255, 255, 0)};
+uniform sampler2D sequenceTexture; 
+uniform int sequenceLength;
 
 const int MAX_MARCHING_STEPS = 255;
 const float MIN_DIST = 0.0;
@@ -19,8 +17,6 @@ const float NUC_RADIUS = 0.1 * UNIT_RATIO;
 const float PAIR_SEP = 0.1 * UNIT_RATIO;
 const float PHOS_RADIUS = NUC_RADIUS;
 const float COIL_RATE = 0.5986479 / NUC_SEP / 4.0;
-
-out vec4 fragColor;
 
 float sdBox(vec3 p, vec3 b) {
   vec3 d = abs(p) - b;
@@ -137,6 +133,32 @@ vec3 rayDirection(float fieldOfView, vec2 size, vec2 fragCoord) {
     return normalize(vec3(xy, -z));
 }
 
+vec3 nucleotideColor(float nucleotideID) {
+    if (nucleotideID == 0.0) { // 0
+        return vec3(0, 255, 255);
+    } else if (nucleotideID == 1.0) { // 255
+        return vec3(255, 0, 255);
+    } else if (nucleotideID >= 0.5) { // 200
+        return vec3(0, 255, 0);
+    } else if (nucleotideID <= 0.5) { // 10
+        return vec3(0, 0, 255);
+    }
+    return vec3(0);
+}
+
+vec3 complementaryNucleotideColor(float nucleotideID) {
+    if (nucleotideID == 0.0) { // 0
+        return vec3(0, 255, 0);
+    } else if (nucleotideID == 1.0) { // 255
+        return vec3(0, 0, 255);
+    } else if (nucleotideID >= 0.5) { // 200
+        return vec3(0, 255, 255);
+    } else if (nucleotideID <= 0.5) { // 10
+        return vec3(255, 0, 255);
+    }
+    return vec3(0);
+}
+
 void main() {
     vec3 viewDir = rayDirection(45.0, res, gl_FragCoord.xy);
     vec3 eye = vec3(5.0, (mpos.y - 0.5) * 20.0, 5.0);
@@ -150,7 +172,7 @@ void main() {
     float dist = shortestDistanceToSurface(eye, worldDir, MIN_DIST, MAX_DIST);
     
     if (dist > MAX_DIST - EPSILON) {
-        fragColor = vec4(0.0, 0.0, 0.0, 0.0);
+        gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
 		return;
     }
     
@@ -158,13 +180,11 @@ void main() {
 
     vec3 K_a = vec3(0);
     if (sqrt(pow(p.x, 2.0) + pow(p.z, 2.0)) < PHOS_SEP / 2.0 - PHOS_RADIUS) {
-        // int nuc_color_idx = sequence[int(mod(floor(p.y / NUC_SEP), sequence.length))];
-        if ((p*rotateY(COIL_RATE*p.y)).z < 0.0) { // TODO: fix this condition to be real
-            // K_a = NUC_COLORS[nuc_color_idx]
-            K_a = vec3(0, 255, 0);
+        float nuc_color_idx = texture2D(sequenceTexture, vec2(mod((p.y - 0.05) / NUC_SEP, float(sequenceLength)) / float(sequenceLength), 0.5)).w; // sequence[int(mod(floor(p.y / NUC_SEP), 3.0))];
+        if ((p*rotateY(COIL_RATE*p.y)).z < 0.0) {
+            K_a = nucleotideColor(nuc_color_idx);
         } else {
-            // K_a = NUC_COLORS[mod(nuc_color_idx + 2, 4)];
-            K_a = vec3(0, 255, 255);
+            K_a = complementaryNucleotideColor(nuc_color_idx);
         }
     }
     vec3 K_d = K_a;
@@ -173,5 +193,5 @@ void main() {
     
     vec3 color = phongIllumination(K_a, K_d, K_s, shininess, p, eye);
     
-    fragColor = vec4(color, 1.0);
+    gl_FragColor = vec4(color, 1.0);
 }
