@@ -135,26 +135,26 @@ vec3 rayDirection(float fieldOfView, vec2 size, vec2 fragCoord) {
 
 vec3 nucleotideColor(float nucleotideID) {
     if (nucleotideID == 0.0) { // 0
-        return vec3(0, 255, 255);
+        return vec3(0.8, 0.2, 0.17);
     } else if (nucleotideID == 1.0) { // 255
-        return vec3(255, 0, 255);
+        return vec3(0.1, 0.53, 0.26);
     } else if (nucleotideID >= 0.5) { // 200
-        return vec3(0, 255, 0);
+        return vec3(0.98, 0.66, 0.13);
     } else if (nucleotideID <= 0.5) { // 10
-        return vec3(0, 0, 255);
+        return vec3(0.22, 0.44, 0.92);
     }
     return vec3(0);
 }
 
 vec3 complementaryNucleotideColor(float nucleotideID) {
     if (nucleotideID == 0.0) { // 0
-        return vec3(0, 255, 0);
+        return vec3(0.1, 0.53, 0.26);
     } else if (nucleotideID == 1.0) { // 255
-        return vec3(0, 0, 255);
+        return vec3(0.8, 0.2, 0.17);
     } else if (nucleotideID >= 0.5) { // 200
-        return vec3(0, 255, 255);
+        return vec3(0.22, 0.44, 0.92);
     } else if (nucleotideID <= 0.5) { // 10
-        return vec3(255, 0, 255);
+        return vec3(0.98, 0.66, 0.13);
     }
     return vec3(0);
 }
@@ -178,7 +178,7 @@ void main() {
     
     vec3 p = eye + dist * worldDir;
 
-    vec3 K_a = vec3(0);
+    vec3 K_a = vec3(1.0);
     if (sqrt(pow(p.x, 2.0) + pow(p.z, 2.0)) < PHOS_SEP / 2.0 - PHOS_RADIUS) {
         float nuc_color_idx = texture2D(sequenceTexture, vec2(mod((p.y - 0.05) / NUC_SEP, float(sequenceLength)) / float(sequenceLength), 0.5)).w; // sequence[int(mod(floor(p.y / NUC_SEP), 3.0))];
         if ((p*rotateY(COIL_RATE*p.y)).z < 0.0) {
@@ -189,7 +189,7 @@ void main() {
     }
     vec3 K_d = K_a;
     vec3 K_s = vec3(1.0, 1.0, 1.0);
-    float shininess = 0.4;
+    float shininess = 1.0;
     
     vec3 color = phongIllumination(K_a, K_d, K_s, shininess, p, eye);
     
