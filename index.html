@@ -10,8 +10,17 @@
 <body>
     <style>
         html {
+            --bg-co: #fff;
+            --fg-co: #000;
+            --fg-accent: #333;
+            --bg-accent: #f3f3f3;
+            --bg-accent-3: #dedede;
+            --bg-accent-2: #f5f5f5;
             line-height: 1.4;
             -webkit-text-size-adjust: 100%;
+            font-size: 14px;
+            color: var(--fg-co);
+            background: var(--bg-co);
         }
 
         body {
@@ -27,13 +36,99 @@
             top: 0;
             left: 0;
         }
+
+        .nucleotides {
+            outline: none;
+            border: none;
+            max-width: 500px;
+            width: 100vw;
+            height: 50px;
+            padding: 0;
+            padding-left: 25px;
+            padding-right: 25px;
+            box-sizing: border-box;
+            border-radius: 7px;
+            border-bottom-right-radius: 0;
+            border-top-right-radius: 0;
+            background: var(--bg-accent);
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.06);
+            font-size: 1em;
+            transition: max-width 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+        }
+
+        ::selection {
+            background-color: var(--bg-accent-3);
+        }
+
+        .nucleotides:focus {
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.08);
+            max-width: 510px;
+            background: var(--bg-accent-2);
+        }
+
+        .container {
+            position: fixed;
+            width: 100vw;
+            display: flex;
+            flex-flow: row nowrap;
+            justify-content: center;
+            align-items: center;
+            bottom: 0;
+            left: 0;
+            height: 140px;
+        }
+
+        .options {}
     </style>
     <script type="text/javascript">
-        const SAMPLE_RATIO = 1;
+        const SAMPLE_RATIO = 2.0;
+        const NUCLEOTIDES = ["A", "T", "C", "G"];
+        let sequenceArray = Uint8Array.from([0]);
+        let texture = undefined;
         window.addEventListener('load', function () {
+            const input = document.querySelector(".nucleotides");
+            input.addEventListener('keydown', (e) => {
+                console.log(e);
+                if (e.key.length != 1) {
+                    return;
+                }
+                if (NUCLEOTIDES.indexOf(e.key.toUpperCase()) === -1 && e.metaKey === false) {
+                    e.preventDefault();
+                }
+            });
+            input.addEventListener('input', (e) => {
+                let position = e.target.selectionStart;
+                input.value = input.value.toUpperCase();
+                input.value = input.value.replace(/[^GATC]/g, "");
+                e.target.selectionEnd = position;
+                sequenceArray = input.value.split('').map((c) => {
+                    if (c === "A") {
+                        return 0;
+                    } else if (c === "T") {
+                        return 255;
+                    } else if (c === "G") {
+                        return 200;
+                    } else {
+                        return 10;
+                    }
+                });
+                if (sequenceArray.length === 0) {
+                    sequenceArray = Uint8Array.from([0]);
+                } else {
+                    sequenceArray = Uint8Array.from(sequenceArray);
+                }
+                if (texture !== undefined) {
+                    gl.bindTexture(gl.TEXTURE_2D, texture);
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+                    gl.texImage2D(gl.TEXTURE_2D, 0, gl.ALPHA, sequenceArray.length, 1, 0, gl.ALPHA, gl.UNSIGNED_BYTE, sequenceArray);
+                }
+            });
             const canvas = document.querySelector("canvas");
             let view = canvas.getBoundingClientRect();
-            let mpos = { x: 0, y: 0 };
+            let mpos = { x: 0.5, y: 0.5 };
             canvas.width = view.width * SAMPLE_RATIO;
             canvas.height = view.height * SAMPLE_RATIO;
             const gl = canvas.getContext("webgl");
@@ -80,7 +175,7 @@
                     let loc = gl.getAttribLocation(program, 'aVertexPosition');
                     let res = gl.getUniformLocation(program, 'res');
                     let mloc = gl.getUniformLocation(program, 'mpos');
-                    let texture = gl.createTexture();
+                    texture = gl.createTexture();
                     let sequenceTexture = gl.getUniformLocation(program, 'sequenceTexture');
                     let sequenceLength = gl.getUniformLocation(program, 'sequenceLength');
                     gl.vertexAttribPointer(loc, 3, gl.FLOAT, false, 0, 0);
@@ -97,7 +192,6 @@
                         canvas.height = view.height * SAMPLE_RATIO
                     });
 
-                    let sequenceArray = Uint8Array.from([10, 200, 255, 0]);
                     console.log(sequenceArray);
                     gl.bindTexture(gl.TEXTURE_2D, texture);
                     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
@@ -119,11 +213,20 @@
                         window.requestAnimationFrame(draw);
                     };
 
+                    input.focus();
+
                     window.requestAnimationFrame(draw);
                 });
         })
     </script>
     <canvas></canvas>
+    <div class="container">
+        <div class="wrapper">
+            <input class="nucleotides" type="text" placeholder="nucleotides" autocomplete="off" autocorrect="off"
+                autocapitalize="off" spellcheck="false"></input>
+            <div class="options"></div>
+        </div>
+    </div>
 </body>
 
 </html>
